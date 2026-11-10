@@ -30,3 +30,6 @@ jupytext = ">=1.19.5,<2"
 [environments]
 ci = []
 default = { features = ["development"] }
+
+[activation.env]
+JUPYTER_RUNTIME_DIR = "C:\\Users\\Jens\\jupyter_runtime"
