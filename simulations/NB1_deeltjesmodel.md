@@ -312,9 +312,6 @@ Met de MyST extentie in jupyterlab kun je gebruik maken van [eval](https://mystm
 De runtime is {eval}`verschil` korter.
 ```
 
-```python
-
-```
 
 ## Aan de slag met deeltjes
 Zoom je heel ver in, dan zie je deeltjes rond vliegen.
@@ -600,6 +597,20 @@ class ParticleClass:
 ```
 
 ```python
+# Maken van de class met versnelling
+class ParticleClass:
+    def __init__(self, m, v, r, R):
+        self.m = m                         # mass of the particle
+        self.v = np.array(v, dtype=float)  # velocity vector
+        self.r = np.array(r, dtype=float)  # position vector
+        self.R = R                         # radius of the particle
+
+    def update_position(self):
+        self.r += self.v * dt
+    
+    def update_velocity(self, a):
+        self.v += a*dt
+
 
 # Simulation parameters
 dt = 0.1         # time step
@@ -847,7 +858,7 @@ Nu je een beetje weet hoe een numeriek model werkt, hoe je boundaries kunt opgev
 ```
 
 ```{solution} ex-deeltjes_10
-1. $\sqrt{r_{1}^{2} + r_{2}^{2}} = 2R$
+1. $\sqrt{(r_{1,x}-r_{2,x})^{2} + (r_{1,y}-r_{2,y})^{2}} = 2R$
 ```
 
 ```python tags=["NB1_botsingsvoorwaarde"]
@@ -865,8 +876,10 @@ class ParticleClass:
         self.r += self.v * dt  
 
     def collide_detection(self, other):
-        ### YOUR CODE HERE ###
-        return  dx**2+dy**2 < rr**2 
+        dx = self.r[0] - other.r[0]
+        dy = self.r[1] - other.r[1]
+        rr = self.R + other.R
+        return  dx**2+dy**2 < rr**2
 ```
 
 ```python
@@ -917,8 +930,22 @@ def update(frame):
 
     # botsing tussen de deeltjes onderling
     if particleA.collide_detection(particleB):
-        ### YOUR CODE HERE ###
+        dx = particleA.r[0] - particleB.r[0]
+        dy = particleA.r[1] - particleB.r[1]
+        
+        if dx > 0:
+            particleA.v[0] = np.abs(particleA.v[0])
+            particleB.v[0] = -np.abs(particleB.v[0])
+        elif dx < 0:
+            particleA.v[0] = -np.abs(particleA.v[0])
+            particleB.v[0] = np.abs(particleB.v[0])
 
+        if dy > 0:
+            particleA.v[1] = np.abs(particleA.v[1])
+            particleB.v[1] = -np.abs(particleB.v[1])
+        elif dy < 0:
+            particleA.v[1] = -np.abs(particleA.v[1])
+            particleB.v[1] = np.abs(particleB.v[1])
 
     # botsing met de wand
     if particleA.r[0]**2>100: 
@@ -936,6 +963,9 @@ def update(frame):
 
 # Creeer animatie
 ani = FuncAnimation(fig, update, frames=range(num_steps), init_func=init, blit=True, interval=50)
+
+# Prevent the static initial figure from displaying
+plt.close(fig)
 
 # Voor Jupyter notebook:
 from IPython.display import HTML
@@ -996,7 +1026,7 @@ Wat is de beperkende factor in ons script om het aantal botsingen als functie va
 ```
 
 ```{solution} ex-deeltjes-12
-Jouw antwoord
+$\pi$ Duikt bij massaverhoudingen 1:1 en 1:100 inderdaad op, maar na het verhogen van de massa 2 naar 10000 verdwijnt dit verband. Dit is het gevolg van de beperkende factor de grootte van de tijdstap. Doordat er heel veel botsingingen gebeuren in een hele korte tijd gaat dit met grotere tijdstappen fout. De massa's zullen elkaar overlappen in plaats van botsen met elkaar waardoor het aantal botsingen niet accuraat gemeten kan worden. Het verkleinen van de tijdstap lost dit probleem op alleen kost dit een stuk meer tijd voor de computer om te berekenen. Na het aanpassen van de tijdstap naar 0.01 en het maximale geheugen dat de animatie mag innemen kon ik dit verwachtte verband ook zien bij massaverhouding 1:10.000, maar bij massaverhouding 1:1.000.000 was de simulatie ook bij een tijdstap van 0.01 niet meer accuraat.
 ```
 
 
@@ -1022,7 +1052,7 @@ class ParticleClass:
 dt = 0.1         # time step
 num_steps = 530  # number of time steps
 m1 = 1.0
-m2 = 1.0
+m2 = 50.0
 
 particleA = ParticleClass(m=m1, v=[0, 0], r=[-4.0, 0.0],R=0.45)  
 particleB = ParticleClass(m=m2, v=[-1, 0], r=[-2.0, 0.0],R=0.45)  
@@ -1061,29 +1091,30 @@ def update(frame):
 
     dotA.set_data([particleA.r[0]], [particleA.r[1]])
     dotB.set_data([particleB.r[0]], [particleB.r[1]])
-
+    
     counter_text.set_text(f"Collisions: {counter}")
 
     #collision detection and response
     if particleA.collide_detection(particleB):
         vA, vB, mA, mB, rA, rB = particleA.v, particleB.v, particleA.m, particleB.m, particleA.r, particleB.r
-        vA_new = vA - 2 * mB / (mA + mB) * np.dot(vA - vB, rA - rB) / (1e-12+np.linalg.norm(rA - rB))**2 * (rA - rB)
-        vB_new = vB - 2 * mA / (mA + mB) * np.dot(vB - vA, rB - rA) / (1e-12+np.linalg.norm(rB - rA))**2 * (rB - rA)
-        particleA.v = vA_new
-        particleB.v = vB_new
-        ### YOUR CODE HERE ###
+        if np.dot(vA - vB, rA - rB) < 0:
+            vA_new = vA - 2 * mB / (mA + mB) * np.dot(vA - vB, rA - rB) / (1e-12+np.linalg.norm(rA - rB))**2 * (rA - rB)
+            vB_new = vB - 2 * mA / (mA + mB) * np.dot(vB - vA, rB - rA) / (1e-12+np.linalg.norm(rB - rA))**2 * (rB - rA)
+            particleA.v = vA_new
+            particleB.v = vB_new
+            counter += 1
 
 
     # wall collision detection and response
-    if particleA.r[0]**2>100: # Check if particle is outside the bounds, np.abs could be used but is slower
+    if particleA.r[0]<-10: # Check if particle is outside the bounds, np.abs could be used but is slower
         particleA.v[0] = -particleA.v[0]
-        ### YOUR CODE HERE ###
+        counter += 1
     if particleA.r[1]**2>100: 
         particleA.v[1] = -particleA.v[1]
-        ### YOUR CODE HERE ###
+        counter += 1
 
     dot.set_data([particleB.r[0]], [particleB.r[1]])
-    if particleB.r[0]**2>100: 
+    if particleB.r[0]<-10: 
         particleB.v[0] = -particleB.v[0]
 
     if particleB.r[1]**2>100: 
@@ -1092,7 +1123,10 @@ def update(frame):
     return dot, counter_text
 
 # Create animation
-ani = FuncAnimation(fig, update, frames=range(200), init_func=init, blit=True, interval=50)
+ani = FuncAnimation(fig, update, frames=range(num_steps), init_func=init, blit=True, interval=50)
+
+# Prevent the static initial figure from displaying
+plt.close(fig)
 
 # For Jupyter notebook:
 from IPython.display import HTML
@@ -1105,8 +1139,8 @@ Pas de bovenstaande code aan zodat $m_1 = 1$ en $m_2 = 50$. Run de code en geef 
 
 
 ```python tags=["NB1_eindantwoord"]
-#num_botsingen = ...
-### YOUR CODE HERE ###
+num_botsingen = int(counter)
+print("Bij massaverhouding 1:50 zijn er {} botsingen" .format(num_botsingen))
 ```
 
 ```{exercise}
