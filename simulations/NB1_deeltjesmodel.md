@@ -481,7 +481,7 @@ class ParticleClass:
         self.r += self.v * dt
     
 particle = ParticleClass(m=1.0, v=[5.0, 0], r=[0.0, 0.0],R=1.0) 
-limit = 10 + 0.5 * particle.R #Defining this so it calcs only once
+limit = 10 + particle.R #Defining this so it calcs only once
 
 def update(frame):
     particle.update_position()
