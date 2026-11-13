@@ -3,7 +3,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main, NB1_Jens]
+    branches: [main]
       
 permissions:
   contents: read
