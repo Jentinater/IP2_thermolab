@@ -484,13 +484,15 @@ particle = ParticleClass(m=1.0, v=[5.0, 0], r=[0.0, 0.0],R=1.0)
 limit = 10 + particle.R #Defining this so it calcs only once
 
 def update(frame):
-    dot.set_data([particle.r[0]], [particle.r[1]])
+    particle.update_position()
     
     if particle.r[0] >= limit:
         particle.r[0] = -limit
-
-    particle.update_position()
-    return dot,         
+    elif particle.r[0] <= -limit:
+        particle.r[1] = limit
+        
+    dot.set_data([particle.r[0]], [particle.r[1]])
+    return dot,       
 ```
 
 ```{exercise} Harde wanden
