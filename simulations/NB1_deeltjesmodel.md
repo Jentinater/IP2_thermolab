@@ -484,10 +484,12 @@ particle = ParticleClass(m=1.0, v=[5.0, 0], r=[0.0, 0.0],R=1.0)
 limit = 10 + particle.R #Defining this so it calcs only once
 
 def update(frame):
-    particle.update_position()
     dot.set_data([particle.r[0]], [particle.r[1]])
+    
     if particle.r[0] > limit:
         particle.r[0] = -limit
+
+    particle.update_position()
     return dot,         
 ```
 
