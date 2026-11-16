@@ -486,7 +486,7 @@ limit = 10 + particle.R #Defining this so it calcs only once
 def update(frame):
     dot.set_data([particle.r[0]], [particle.r[1]])
     
-    if particle.r[0] > limit:
+    if particle.r[0] >= limit:
         particle.r[0] = -limit
 
     particle.update_position()
