@@ -480,15 +480,16 @@ class ParticleClass:
     def update_position(self):
         self.r += self.v * dt
     
-particle = ParticleClass(m=1.0, v=[5.0, 0], r=[0.0, 0.0],R=1.0) 
+particle = ParticleClass(m=1.0, v=[5.0, 0], r=[0.0, 0.0],R=1.0)
+limit = 10 + 0.5 * particle.R #Defining this so it calcs only once
 
 def update(frame):
     particle.update_position()
     
-    if particle.r[0] >= 10:
-        particle.r[0] = -10
-    elif particle.r[0] <= -10:
-        particle.r[0] = 10
+    if particle.r[0] >= limit:
+        particle.r[0] = -limit
+    elif particle.r[0] <= -limit:
+        particle.r[0] = limit
         
     dot.set_data([particle.r[0]], [particle.r[1]])
     return dot,     
